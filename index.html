@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Vocab Practice</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Retro Vocab</h1>
+        </header>
+
+        <!-- Menu View -->
+        <section id="menu-view" class="view active">
+            <button id="btn-add-vocab" class="btn primary">Add New Vocab</button>
+            <button id="btn-bank-test" class="btn secondary">Vocab Bank Test</button>
+            <button id="btn-my-dict" class="btn warning">My Personal Dictionary</button>
+            <div id="bank-stats"></div>
+        </section>
+
+        <!-- Add Vocab View -->
+        <section id="add-view" class="view">
+            <h2>Add Vocabulary</h2>
+            <div class="form-group">
+                <label>English Word:</label>
+                <input type="text" id="input-eng" autocomplete="off" placeholder="e.g. Apple">
+            </div>
+            <div class="form-group">
+                <label>Thai Meaning:</label>
+                <input type="text" id="input-thai" autocomplete="off" placeholder="e.g. แอปเปิ้ล">
+            </div>
+            <button id="btn-save-word" class="btn primary">Add Word</button>
+            <div id="add-status" class="status-msg"></div>
+            
+            <hr>
+            <div id="added-list-preview"></div>
+            <button id="btn-go-practice" class="btn success" style="display:none;">Finish & Go Practice</button>
+            <button id="btn-back-menu-from-add" class="btn danger">Back to Menu</button>
+        </section>
+
+        <!-- Practice & Test View -->
+        <section id="practice-view" class="view">
+            <h2 id="practice-title">Practice Mode</h2>
+            <div id="practice-progress"></div>
+            <div class="card" id="question-card">
+                <h3 id="question-prompt">...</h3>
+                <div id="answer-hint" class="hint"></div>
+                <input type="text" id="input-answer" autocomplete="off">
+                <button id="btn-submit-answer" class="btn primary">Submit</button>
+            </div>
+            <div id="practice-feedback" class="feedback"></div>
+        </section>
+
+        <!-- Results View -->
+        <section id="result-view" class="view">
+            <h2>Results</h2>
+            <div id="result-score" class="card"></div>
+            <div id="saving-status" class="status-msg" style="color:var(--primary-color);"></div>
+            <button id="btn-save-to-bank" class="btn primary" style="display:none;">Save to Bank & Menu</button>
+            <button id="btn-retest-wrong" class="btn warning" style="display:none;">Practice Wrong Words</button>
+            <button id="btn-back-menu-from-result" class="btn secondary">Back to Menu</button>
+        </section>
+
+        <!-- Dictionary View -->
+        <section id="dict-view" class="view">
+            <h2>Personal Dictionary</h2>
+            <div id="dict-list"></div>
+            <button id="btn-back-menu-from-dict" class="btn secondary">Back to Menu</button>
+        </section>
+
+        <!-- Edit Modal -->
+        <div id="edit-modal" class="modal">
+            <div class="modal-content">
+                <h2>Edit Word</h2>
+                <div class="form-group">
+                    <label>English:</label>
+                    <input type="text" id="edit-eng" readonly style="background:#eee; cursor:not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label>Thai Meaning:</label>
+                    <input type="text" id="edit-thai" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>English Definition:</label>
+                    <textarea id="edit-def" rows="3" style="font-family:var(--font-body); padding:10px; font-size:14px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Synonyms (comma separated):</label>
+                    <input type="text" id="edit-syn" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Example Sentence:</label>
+                    <textarea id="edit-ex" rows="2" style="font-family:var(--font-body); padding:10px; font-size:14px;"></textarea>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button id="btn-save-edit" class="btn success" style="flex:1;">Save</button>
+                    <button id="btn-cancel-edit" class="btn danger" style="flex:1;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
