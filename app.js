@@ -55,6 +55,28 @@ document.getElementById('input-thai').addEventListener('keypress', (e) => {
     if(e.key === 'Enter') addWord();
 });
 
+document.getElementById('input-eng').addEventListener('blur', async (e) => {
+    const eng = e.target.value.trim();
+    if(!eng) return;
+    const thaiInput = document.getElementById('input-thai');
+    if(thaiInput.value.trim() !== '') return; 
+    
+    showAddStatus("Translating...", "var(--text-color)");
+    
+    try {
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(eng)}&langpair=en|th`);
+        const data = await res.json();
+        if(data && data.responseData && data.responseData.translatedText) {
+            // MyMemory sometimes returns the exact string if it can't translate, or weird matches.
+            // But it works fine for simple words.
+            thaiInput.value = data.responseData.translatedText;
+            showAddStatus("", "");
+        }
+    } catch(err) {
+        showAddStatus("", "");
+    }
+});
+
 function addWord() {
     const engInput = document.getElementById('input-eng');
     const thaiInput = document.getElementById('input-thai');
@@ -115,16 +137,13 @@ function startPracticeMode(wordList, isTest) {
         listToUse = listToUse.slice(0, 10);
     }
     
-    // Each word has 2 steps: English to Thai, and Thai to English
+    // Each word has 1 random step: either English to Thai OR Thai to English
     practiceQueue = [];
     listToUse.forEach(word => {
-        // Randomize order of Thai/Eng prompt for variety
         if(Math.random() > 0.5) {
             practiceQueue.push({ ...word, step: 0 }); // Ask English
-            practiceQueue.push({ ...word, step: 1 }); // Ask Thai
         } else {
             practiceQueue.push({ ...word, step: 1 }); // Ask Thai
-            practiceQueue.push({ ...word, step: 0 }); // Ask English
         }
     });
     
@@ -162,6 +181,11 @@ function nextPracticeQuestion() {
     currentPracticeWord = practiceQueue.shift();
     currentPracticeStep = currentPracticeWord.step;
     
+    // Check if we should show the play audio button
+    // It makes sense to play audio when asking for Thai (showing English),
+    // or when asking for English (showing Thai) they can use audio as a hint.
+    // Let's just always show it.
+    
     let promptText = "";
     if(currentPracticeStep === 0) {
         promptText = `Type English for:\n"${currentPracticeWord.thai}"`;
@@ -172,6 +196,20 @@ function nextPracticeQuestion() {
     document.getElementById('question-prompt').innerText = promptText;
     inputEl.focus();
 }
+
+// --- Audio TTS ---
+window.playAudio = function(text) {
+    if(!text) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    window.speechSynthesis.speak(utterance);
+}
+
+document.getElementById('btn-play-audio').addEventListener('click', () => {
+    if(currentPracticeWord) {
+        playAudio(currentPracticeWord.eng);
+    }
+});
 
 function checkAnswer() {
     const inputEl = document.getElementById('input-answer');
@@ -393,6 +431,7 @@ function renderDictionary() {
             ${synHtml}
             ${exHtml}
             <div class="dict-actions">
+                <button class="btn btn-small secondary" onclick="playAudio('${word.eng.replace(/'/g, "\\'")}')">🔊 Listen</button>
                 <button class="btn btn-small warning" onclick="openEditModal('${word.id}')">Edit</button>
                 <button class="btn btn-small danger" onclick="deleteWord('${word.id}')">Delete</button>
             </div>
@@ -437,6 +476,7 @@ document.getElementById('btn-save-edit').addEventListener('click', () => {
     
     const wordIndex = vocabBank.findIndex(w => w.id === currentEditId);
     if(wordIndex > -1) {
+        vocabBank[wordIndex].eng = document.getElementById('edit-eng').value.trim();
         vocabBank[wordIndex].thai = document.getElementById('edit-thai').value.trim();
         vocabBank[wordIndex].enDefinition = document.getElementById('edit-def').value.trim();
         vocabBank[wordIndex].synonyms = document.getElementById('edit-syn').value.trim();
