@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #ff6b6b;
+  --color-secondary: #4ecdc4;
+  --color-success: #a8e6cf;
+  --color-danger: #ff8b94;
+  --color-warning: #ffd3b6;
+  --color-border: #2d2a2e;
+  --color-bg: #f4ecd8;
+
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+
+  --animate-rgb-glow: rgb-glow 5s linear infinite;
+  --animate-blink-caret-cyber: blink-caret-cyber 1s step-end infinite;
+
+  @keyframes rgb-glow {
+    0% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000, inset 0 0 10px #ff0000; }
+    33% { border-color: #00ff00; box-shadow: 0 0 15px #00ff00, inset 0 0 10px #00ff00; }
+    66% { border-color: #0000ff; box-shadow: 0 0 15px #0000ff, inset 0 0 10px #0000ff; }
+    100% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000, inset 0 0 10px #ff0000; }
+  }
+
+  @keyframes blink-caret-cyber {
+    0%, 100% { border-color: transparent; box-shadow: none; }
+    50% { border-color: #ff00ff; box-shadow: 0 4px 4px -2px #ff00ff; }
+  }
+}
+
+/* Custom Utilities for Retro Scrollbar */
+.dict-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.dict-list-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+}
+
+/* Optional cyberpunk background */
+.bg-cyberpunk {
+  background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
