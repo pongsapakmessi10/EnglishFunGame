@@ -17,7 +17,8 @@ const views = {
     add: document.getElementById('add-view'),
     practice: document.getElementById('practice-view'),
     result: document.getElementById('result-view'),
-    dict: document.getElementById('dict-view')
+    dict: document.getElementById('dict-view'),
+    typing: document.getElementById('typing-view')
 };
 
 // --- View Navigation ---
@@ -137,15 +138,15 @@ function startPracticeMode(wordList, isTest) {
         listToUse = listToUse.slice(0, 10);
     }
     
-    // Each word has 1 random step: either English to Thai OR Thai to English
+    // Push BOTH steps and then shuffle
     practiceQueue = [];
     listToUse.forEach(word => {
-        if(Math.random() > 0.5) {
-            practiceQueue.push({ ...word, step: 0 }); // Ask English
-        } else {
-            practiceQueue.push({ ...word, step: 1 }); // Ask Thai
-        }
+        practiceQueue.push({ ...word, step: 0 }); // Ask English
+        practiceQueue.push({ ...word, step: 1 }); // Ask Thai
     });
+    
+    // Shuffle the queue fully
+    practiceQueue.sort(() => 0.5 - Math.random());
     
     totalQuestions = practiceQueue.length;
     currentQuestionIndex = 0;
@@ -489,3 +490,106 @@ document.getElementById('btn-save-edit').addEventListener('click', () => {
     editModal.classList.remove('active');
     currentEditId = null;
 });
+
+// --- Typing Speed Test Logic ---
+document.getElementById('btn-typing-test').addEventListener('click', () => {
+    if(vocabBank.length === 0) {
+        alert("Vocab bank is empty! Add words first.");
+        return;
+    }
+    document.getElementById('typing-text-display').innerHTML = "Click Start to begin typing test.";
+    document.getElementById('typing-timer').innerText = "60s";
+    document.getElementById('typing-wpm').innerText = "0 WPM";
+    document.getElementById('btn-start-typing').style.display = 'block';
+    switchView('typing');
+});
+
+document.getElementById('btn-back-menu-from-typing').addEventListener('click', () => {
+    endTypingTest();
+    switchView('menu');
+});
+
+let typingTargetText = "";
+let typingCurrentIndex = 0;
+let typingTimerInterval = null;
+let typingTimeLeft = 60;
+let typingIsActive = false;
+let typingCorrectChars = 0;
+
+document.getElementById('btn-start-typing').addEventListener('click', () => {
+    // Pick up to 20 random words
+    let words = [...vocabBank].sort(() => 0.5 - Math.random()).slice(0, 20).map(w => w.eng);
+    typingTargetText = words.join(" ").toLowerCase(); // make it all lowercase
+    
+    // Render text
+    const displayEl = document.getElementById('typing-text-display');
+    displayEl.innerHTML = '';
+    
+    for(let i=0; i<typingTargetText.length; i++) {
+        const span = document.createElement('span');
+        span.className = 'type-char';
+        if(i === 0) span.classList.add('current');
+        span.innerText = typingTargetText[i];
+        displayEl.appendChild(span);
+    }
+    
+    typingCurrentIndex = 0;
+    typingTimeLeft = 60;
+    typingCorrectChars = 0;
+    document.getElementById('typing-timer').innerText = "60s";
+    document.getElementById('typing-wpm').innerText = "0 WPM";
+    
+    document.getElementById('btn-start-typing').style.display = 'none';
+    typingIsActive = true;
+    
+    typingTimerInterval = setInterval(() => {
+        typingTimeLeft--;
+        document.getElementById('typing-timer').innerText = typingTimeLeft + "s";
+        
+        const minutesPassed = (60 - typingTimeLeft) / 60;
+        let wpm = 0;
+        if(minutesPassed > 0) {
+            wpm = Math.round((typingCorrectChars / 5) / minutesPassed);
+        }
+        document.getElementById('typing-wpm').innerText = wpm + " WPM";
+        
+        if(typingTimeLeft <= 0) {
+            endTypingTest();
+            alert(`Time's up! Your speed is ${wpm} WPM.`);
+        }
+    }, 1000);
+});
+
+document.addEventListener('keydown', (e) => {
+    if(!typingIsActive) return;
+    if(e.key.length !== 1) return; // ignore shift, ctrl, etc.
+    
+    const expectedChar = typingTargetText[typingCurrentIndex];
+    const spans = document.getElementById('typing-text-display').children;
+    
+    if(e.key.toLowerCase() === expectedChar.toLowerCase()) {
+        spans[typingCurrentIndex].classList.remove('current', 'wrong');
+        spans[typingCurrentIndex].classList.add('correct');
+        typingCorrectChars++;
+        typingCurrentIndex++;
+        
+        if(typingCurrentIndex < typingTargetText.length) {
+            spans[typingCurrentIndex].classList.add('current');
+        } else {
+            endTypingTest();
+            const minutesPassed = (60 - typingTimeLeft) / 60;
+            const wpm = Math.round((typingCorrectChars / 5) / minutesPassed);
+            document.getElementById('typing-wpm').innerText = wpm + " WPM";
+            setTimeout(() => alert(`Awesome! You finished all words early. Your speed is ${wpm} WPM.`), 100);
+        }
+    } else {
+        spans[typingCurrentIndex].classList.add('wrong');
+    }
+});
+
+function endTypingTest() {
+    typingIsActive = false;
+    clearInterval(typingTimerInterval);
+    document.getElementById('btn-start-typing').style.display = 'block';
+    document.getElementById('btn-start-typing').innerText = "Restart Test";
+}

@@ -233,3 +233,69 @@ textarea {
     width: 100%;
 }
 textarea:focus { background: #fff; border-color: var(--primary-color); }
+
+/* --- Cyberpunk RGB Theme for Typing View --- */
+.cyberpunk-theme {
+    background-color: #0b0c10 !important;
+    color: #0ff !important;
+    padding: 30px;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    /* Optional grid/scanline background */
+    background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.neon-title {
+    color: #ff00ff;
+    text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
+    font-family: 'Courier New', Courier, monospace;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+}
+
+.rgb-neon-card {
+    background: rgba(10, 10, 10, 0.8) !important;
+    border: 2px solid #0ff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 10px #0ff, inset 0 0 10px #0ff;
+    animation: rgb-glow 5s linear infinite;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+@keyframes rgb-glow {
+    0% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000, inset 0 0 10px #ff0000; }
+    33% { border-color: #00ff00; box-shadow: 0 0 15px #00ff00, inset 0 0 10px #00ff00; }
+    66% { border-color: #0000ff; box-shadow: 0 0 15px #0000ff, inset 0 0 10px #0000ff; }
+    100% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000, inset 0 0 10px #ff0000; }
+}
+
+.cyberpunk-theme .type-char {
+    display: inline-block;
+    color: #555;
+    border-bottom: 3px solid transparent;
+}
+.cyberpunk-theme .type-char.correct {
+    color: #0ff;
+    text-shadow: 0 0 8px #0ff;
+}
+.cyberpunk-theme .type-char.wrong {
+    color: #ff0055;
+    background: transparent;
+    text-shadow: 0 0 10px #ff0055;
+}
+.cyberpunk-theme .type-char.current {
+    color: #fff;
+    border-bottom: 3px solid #ff00ff;
+    animation: blink-caret-cyber 1s step-end infinite;
+}
+
+@keyframes blink-caret-cyber {
+    0%, 100% { border-color: transparent; box-shadow: none; }
+    50% { border-color: #ff00ff; box-shadow: 0 4px 4px -2px #ff00ff; }
+}

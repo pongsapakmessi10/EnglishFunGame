@@ -17,6 +17,7 @@
         <section id="menu-view" class="view active">
             <button id="btn-add-vocab" class="btn primary">Add New Vocab</button>
             <button id="btn-bank-test" class="btn secondary">Vocab Bank Test</button>
+            <button id="btn-typing-test" class="btn success">Typing Speed Test</button>
             <button id="btn-my-dict" class="btn warning">My Personal Dictionary</button>
             <div id="bank-stats"></div>
         </section>
@@ -72,6 +73,22 @@
             <h2>Personal Dictionary</h2>
             <div id="dict-list"></div>
             <button id="btn-back-menu-from-dict" class="btn secondary">Back to Menu</button>
+        </section>
+
+        <!-- Typing View -->
+        <section id="typing-view" class="view cyberpunk-theme">
+            <h2 class="neon-title">Cyber Typing Speed Test</h2>
+            <div style="display:flex; justify-content:space-between; margin-bottom:15px; padding: 0 10px;">
+                <div id="typing-timer" style="font-size:20px; font-weight:bold; color:#0ff; text-shadow:0 0 5px #0ff;">60s</div>
+                <div id="typing-wpm" style="font-size:20px; font-weight:bold; color:#ff00ff; text-shadow:0 0 5px #ff00ff;">0 WPM</div>
+            </div>
+            <div id="typing-text-display" class="rgb-neon-card" style="font-size:24px; text-align:left; line-height:1.6; letter-spacing:2px; font-weight:bold; user-select:none;">
+                Click Start to begin typing test.
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="btn-start-typing" class="btn" style="background:#0ff; color:#000; box-shadow:0 0 10px #0ff; font-weight:bold; border:none; text-transform:uppercase;">Start Typing</button>
+                <button id="btn-back-menu-from-typing" class="btn" style="background:#222; color:#fff; border:1px solid #555;">Back to Menu</button>
+            </div>
         </section>
 
         <!-- Edit Modal -->
