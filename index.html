@@ -93,31 +93,71 @@
 
         <!-- Edit Modal -->
         <div id="edit-modal" class="modal">
-            <div class="modal-content">
-                <h2>Edit Word</h2>
-                <div class="form-group">
-                    <label>English:</label>
-                    <input type="text" id="edit-eng" autocomplete="off">
+            <div class="modal-content" style="max-width: 800px;">
+                <h2>Edit Word Details</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left;">
+                    
+                    <!-- Basic Info -->
+                    <div>
+                        <div class="form-group">
+                            <label>English:</label>
+                            <input type="text" id="edit-eng" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Thai Meaning:</label>
+                            <input type="text" id="edit-thai" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>IPA Pronunciation:</label>
+                            <input type="text" id="edit-ipa" autocomplete="off" placeholder="e.g., /həˈloʊ/">
+                        </div>
+                        <div class="form-group">
+                            <label>Part of Speech:</label>
+                            <input type="text" id="edit-pos" autocomplete="off" placeholder="e.g., n., v., adj.">
+                        </div>
+                        <div class="form-group">
+                            <label>Synonyms:</label>
+                            <input type="text" id="edit-syn" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Tenses (V1, V2, V3):</label>
+                            <input type="text" id="edit-tenses" autocomplete="off" placeholder="-">
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Info -->
+                    <div>
+                        <div class="form-group">
+                            <label>English Definition:</label>
+                            <textarea id="edit-def" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Thai Definition:</label>
+                            <textarea id="edit-thaidef" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>English Example:</label>
+                            <textarea id="edit-ex" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Thai Example:</label>
+                            <textarea id="edit-exthai" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Word Family:</label>
+                            <input type="text" id="edit-family" autocomplete="off" placeholder="-">
+                        </div>
+                        <div class="form-group">
+                            <label>Prefix / Suffix:</label>
+                            <input type="text" id="edit-affixes" autocomplete="off" placeholder="-">
+                        </div>
+                    </div>
+                    
                 </div>
-                <div class="form-group">
-                    <label>Thai Meaning:</label>
-                    <input type="text" id="edit-thai" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>English Definition:</label>
-                    <textarea id="edit-def" rows="3" style="font-family:var(--font-body); padding:10px; font-size:14px;"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Synonyms (comma separated):</label>
-                    <input type="text" id="edit-syn" autocomplete="off">
-                </div>
-                <div class="form-group">
-                    <label>Example Sentence:</label>
-                    <textarea id="edit-ex" rows="2" style="font-family:var(--font-body); padding:10px; font-size:14px;"></textarea>
-                </div>
-                <div style="display:flex; gap:10px; margin-top:15px;">
-                    <button id="btn-save-edit" class="btn success" style="flex:1;">Save</button>
-                    <button id="btn-cancel-edit" class="btn danger" style="flex:1;">Cancel</button>
+                
+                <div style="margin-top:20px;">
+                    <button id="btn-save-edit" class="btn primary">Save Changes</button>
+                    <button id="btn-cancel-edit" class="btn secondary">Cancel</button>
                 </div>
             </div>
         </div>

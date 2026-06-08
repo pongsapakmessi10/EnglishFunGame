@@ -339,6 +339,13 @@ document.getElementById('btn-save-to-bank').addEventListener('click', async () =
                 const meaning = entry.meanings[0];
                 const def = meaning?.definitions[0];
                 
+                wordObj.ipa = "";
+                if(entry.phonetics && entry.phonetics.length > 0) {
+                    const ph = entry.phonetics.find(p => p.text);
+                    if(ph) wordObj.ipa = ph.text;
+                }
+                
+                wordObj.pos = meaning?.partOfSpeech || "";
                 wordObj.enDefinition = def?.definition || "";
                 wordObj.example = def?.example || "";
                 
@@ -347,14 +354,33 @@ document.getElementById('btn-save-to-bank').addEventListener('click', async () =
                     if (m.synonyms) syns = syns.concat(m.synonyms);
                 });
                 wordObj.synonyms = [...new Set(syns)].slice(0, 5).join(', ');
+                
+                // Try to translate the example sentence
+                if(wordObj.example) {
+                    try {
+                        const exRes = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(wordObj.example)}&langpair=en|th`);
+                        const exData = await exRes.json();
+                        if(exData && exData.responseData && exData.responseData.translatedText) {
+                            wordObj.exThai = exData.responseData.translatedText;
+                        }
+                    } catch(err) { }
+                }
             }
         } catch(e) {
             console.error("API fetch failed for " + wordObj.eng, e);
         }
         
+        if(!wordObj.ipa) wordObj.ipa = "";
+        if(!wordObj.pos) wordObj.pos = "";
         if(!wordObj.enDefinition) wordObj.enDefinition = "";
+        if(!wordObj.thaiDef) wordObj.thaiDef = "";
         if(!wordObj.synonyms) wordObj.synonyms = "";
         if(!wordObj.example) wordObj.example = "";
+        if(!wordObj.exThai) wordObj.exThai = "";
+        if(!wordObj.tenses) wordObj.tenses = "-";
+        if(!wordObj.wordFamily) wordObj.wordFamily = "-";
+        if(!wordObj.affixes) wordObj.affixes = "-";
+        
         wordObj.id = Date.now() + Math.random().toString().slice(2, 6);
     }
     
@@ -415,30 +441,59 @@ function renderDictionary() {
         if(word.synonyms) {
             const synArr = word.synonyms.split(',').map(s => s.trim()).filter(s => s);
             if(synArr.length > 0) {
-                synHtml = `<div class="dict-syn"><strong>Synonyms:</strong> ` + 
-                          synArr.map(s => `<span>${s}</span>`).join('') + `</div>`;
+                synHtml = `<div class="dict-syn-compact"><strong>Synonyms:</strong> ` + 
+                          synArr.map(s => `<span>${s}</span>`).join(', ') + `</div>`;
             }
         }
         
-        let exHtml = '';
-        if(word.example) {
-            exHtml = `<div class="dict-ex">" ${word.example} "</div>`;
-        }
-        
         card.innerHTML = `
-            <div class="dict-word">${word.eng}</div>
-            <div class="dict-thai">${word.thai}</div>
-            ${word.enDefinition ? `<div class="dict-def"><strong>Def:</strong> ${word.enDefinition}</div>` : ''}
-            ${synHtml}
-            ${exHtml}
-            <div class="dict-actions">
-                <button class="btn btn-small secondary" onclick="playAudio('${word.eng.replace(/'/g, "\\'")}')">🔊 Listen</button>
-                <button class="btn btn-small warning" onclick="openEditModal('${word.id}')">Edit</button>
-                <button class="btn btn-small danger" onclick="deleteWord('${word.id}')">Delete</button>
+            <div class="dict-header">
+                <div class="dict-header-left">
+                    <div class="dict-word">${word.eng}</div>
+                    <div class="dict-thai">${word.thai}</div>
+                    ${synHtml}
+                </div>
+                <div class="dict-header-right">
+                    ${word.ipa ? `<div class="dict-ipa">${word.ipa}</div>` : ''}
+                    ${word.pos ? `<div class="dict-pos">(${word.pos})</div>` : ''}
+                    <button class="btn btn-small secondary" onclick="playAudio('${word.eng.replace(/'/g, "\\'")}')" style="margin-top:5px;">🔊 Listen</button>
+                </div>
             </div>
+            
+            <div class="dict-details" id="details-${word.id}">
+                ${word.enDefinition ? `<div class="dict-detail-item"><span class="dict-detail-label">EN Def:</span> ${word.enDefinition}</div>` : ''}
+                ${word.thaiDef ? `<div class="dict-detail-item"><span class="dict-detail-label">TH Def:</span> ${word.thaiDef}</div>` : ''}
+                ${word.example ? `<div class="dict-detail-item"><span class="dict-detail-label">EN Ex:</span> "${word.example}"</div>` : ''}
+                ${word.exThai ? `<div class="dict-detail-item"><span class="dict-detail-label">TH Ex:</span> "${word.exThai}"</div>` : ''}
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px; padding-top:10px; border-top:1px dashed #ccc;">
+                    <div class="dict-detail-item"><span class="dict-detail-label">Tenses:</span> ${word.tenses || '-'}</div>
+                    <div class="dict-detail-item"><span class="dict-detail-label">Family:</span> ${word.wordFamily || '-'}</div>
+                    <div class="dict-detail-item" style="grid-column: span 2;"><span class="dict-detail-label">Prefix/Suffix:</span> ${word.affixes || '-'}</div>
+                </div>
+                
+                <div class="dict-actions" style="margin-top:15px; display:flex; justify-content:flex-end;">
+                    <button class="btn btn-small warning" onclick="openEditModal('${word.id}')">Edit</button>
+                    <button class="btn btn-small danger" onclick="deleteWord('${word.id}')">Delete</button>
+                </div>
+            </div>
+            
+            <button class="dict-dropdown-btn" id="btn-drop-${word.id}" onclick="toggleDictDetails('${word.id}')">▼</button>
         `;
         listEl.appendChild(card);
     });
+}
+
+window.toggleDictDetails = function(id) {
+    const details = document.getElementById(`details-${id}`);
+    const btn = document.getElementById(`btn-drop-${id}`);
+    if(details.classList.contains('expanded')) {
+        details.classList.remove('expanded');
+        btn.classList.remove('expanded');
+    } else {
+        details.classList.add('expanded');
+        btn.classList.add('expanded');
+    }
 }
 
 window.deleteWord = function(id) {
@@ -458,11 +513,18 @@ window.openEditModal = function(id) {
     if(!word) return;
     
     currentEditId = id;
-    document.getElementById('edit-eng').value = word.eng;
+    document.getElementById('edit-eng').value = word.eng || "";
     document.getElementById('edit-thai').value = word.thai || "";
+    document.getElementById('edit-ipa').value = word.ipa || "";
+    document.getElementById('edit-pos').value = word.pos || "";
     document.getElementById('edit-def').value = word.enDefinition || "";
+    document.getElementById('edit-thaidef').value = word.thaiDef || "";
     document.getElementById('edit-syn').value = word.synonyms || "";
     document.getElementById('edit-ex').value = word.example || "";
+    document.getElementById('edit-exthai').value = word.exThai || "";
+    document.getElementById('edit-tenses').value = word.tenses || "-";
+    document.getElementById('edit-family').value = word.wordFamily || "-";
+    document.getElementById('edit-affixes').value = word.affixes || "-";
     
     editModal.classList.add('active');
 }
@@ -479,9 +541,16 @@ document.getElementById('btn-save-edit').addEventListener('click', () => {
     if(wordIndex > -1) {
         vocabBank[wordIndex].eng = document.getElementById('edit-eng').value.trim();
         vocabBank[wordIndex].thai = document.getElementById('edit-thai').value.trim();
+        vocabBank[wordIndex].ipa = document.getElementById('edit-ipa').value.trim();
+        vocabBank[wordIndex].pos = document.getElementById('edit-pos').value.trim();
         vocabBank[wordIndex].enDefinition = document.getElementById('edit-def').value.trim();
+        vocabBank[wordIndex].thaiDef = document.getElementById('edit-thaidef').value.trim();
         vocabBank[wordIndex].synonyms = document.getElementById('edit-syn').value.trim();
         vocabBank[wordIndex].example = document.getElementById('edit-ex').value.trim();
+        vocabBank[wordIndex].exThai = document.getElementById('edit-exthai').value.trim();
+        vocabBank[wordIndex].tenses = document.getElementById('edit-tenses').value.trim();
+        vocabBank[wordIndex].wordFamily = document.getElementById('edit-family').value.trim();
+        vocabBank[wordIndex].affixes = document.getElementById('edit-affixes').value.trim();
         
         localStorage.setItem('retroVocabBank', JSON.stringify(vocabBank));
         renderDictionary();
