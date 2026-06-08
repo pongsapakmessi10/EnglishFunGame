@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 export interface Word {
   id: string;
@@ -49,6 +50,7 @@ interface VocabContextProps {
 const VocabContext = createContext<VocabContextProps | undefined>(undefined);
 
 export function VocabProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, token } = useAuth();
   const [vocabBank, setVocabBank] = useState<Word[]>([]);
   const [newVocabList, setNewVocabList] = useState<Word[]>([]);
   
@@ -59,35 +61,76 @@ export function VocabProvider({ children }: { children: React.ReactNode }) {
   const [wrongWords, setWrongWords] = useState<Word[]>([]);
   const [totalQuestions, setTotalQuestions] = useState(0);
 
-  // Load from LocalStorage
+  // Load from Backend
   useEffect(() => {
-    const saved = localStorage.getItem("retroVocabBank");
-    if (saved) {
-      try {
-        setVocabBank(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse vocab bank", e);
-      }
+    if (isAuthenticated && token) {
+      fetch("http://localhost:5000/api/vocab", {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setVocabBank(data);
+      })
+      .catch(console.error);
+    } else {
+      setVocabBank([]);
     }
-  }, []);
+  }, [isAuthenticated, token]);
 
-  // Save to LocalStorage whenever vocabBank changes
-  useEffect(() => {
-    localStorage.setItem("retroVocabBank", JSON.stringify(vocabBank));
-  }, [vocabBank]);
-
-  const addWordsToBank = (words: Word[]) => {
-    setVocabBank((prev) => [...prev, ...words]);
+  const addWordsToBank = async (words: Word[]) => {
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:5000/api/vocab/bulk", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify({ words }),
+      });
+      if (res.ok) {
+        const addedWords = await res.json();
+        setVocabBank((prev) => [...prev, ...addedWords]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const updateWord = (id: string, updatedWord: Partial<Word>) => {
-    setVocabBank((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, ...updatedWord } : w))
-    );
+  const updateWord = async (id: string, updatedWord: Partial<Word>) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/vocab/${id}`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(updatedWord),
+      });
+      if (res.ok) {
+        setVocabBank((prev) =>
+          prev.map((w) => (w.id === id ? { ...w, ...updatedWord } : w))
+        );
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const deleteWord = (id: string) => {
-    setVocabBank((prev) => prev.filter((w) => w.id !== id));
+  const deleteWord = async (id: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/vocab/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setVocabBank((prev) => prev.filter((w) => w.id !== id));
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const startPracticeMode = (wordList: Word[], isTest: boolean) => {

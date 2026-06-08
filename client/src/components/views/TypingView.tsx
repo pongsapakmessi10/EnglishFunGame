@@ -10,9 +10,11 @@ export function TypingView() {
   const { vocabBank } = useVocab();
 
   const [isActive, setIsActive] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeElapsed, setTimeElapsed] = useState(0);
   const [wpm, setWpm] = useState(0);
   const [targetText, setTargetText] = useState("");
+  const [definitionQueue, setDefinitionQueue] = useState<string[]>([]);
+  const [currentDefIndex, setCurrentDefIndex] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctChars, setCorrectChars] = useState(0);
   const [charStates, setCharStates] = useState<string[]>([]); // "current", "correct", "wrong", ""
@@ -28,20 +30,14 @@ export function TypingView() {
   useEffect(() => {
     if (isActive) {
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          const newTime = prev - 1;
-          const minutesPassed = (60 - newTime) / 60;
+        setTimeElapsed((prev) => {
+          const newTime = prev + 1;
+          const minutesPassed = newTime / 60;
           let newWpm = 0;
           if (minutesPassed > 0) {
             newWpm = Math.round(correctChars / 5 / minutesPassed);
           }
           setWpm(newWpm);
-
-          if (newTime <= 0) {
-            endTest();
-            setTimeout(() => alert(`Time's up! Your speed is ${newWpm} WPM.`), 50);
-            return 0;
-          }
           return newTime;
         });
       }, 1000);
@@ -54,9 +50,36 @@ export function TypingView() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isActive) return;
-      if (e.key.length !== 1) return; // ignore shift, ctrl, etc.
 
-      e.preventDefault(); // prevent scrolling with spacebar
+      // prevent scrolling with spacebar
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault(); 
+      }
+
+      // If at the end of the current definition, wait for Enter
+      if (currentIndex === targetText.length) {
+        if (e.key === "Enter") {
+          const nextIndex = currentDefIndex + 1;
+          if (nextIndex < definitionQueue.length) {
+            setCurrentDefIndex(nextIndex);
+            const nextDef = definitionQueue[nextIndex].toLowerCase();
+            setTargetText(nextDef);
+            setCurrentIndex(0);
+            const initialStates = new Array(nextDef.length).fill("");
+            if (nextDef.length > 0) initialStates[0] = "current";
+            setCharStates(initialStates);
+          } else {
+            endTest();
+            const minutesPassed = timeElapsed / 60;
+            const finalWpm = minutesPassed > 0 ? Math.round(correctChars / 5 / minutesPassed) : 0;
+            setWpm(finalWpm);
+            setTimeout(() => alert(`Awesome! You finished all definitions. Your speed is ${finalWpm} WPM.`), 100);
+          }
+        }
+        return;
+      }
+
+      if (e.key.length !== 1) return; // ignore shift, ctrl, etc.
 
       const expectedChar = targetText[currentIndex];
 
@@ -71,21 +94,6 @@ export function TypingView() {
         });
         setCorrectChars((c) => c + 1);
         setCurrentIndex((i) => i + 1);
-
-        if (currentIndex + 1 >= targetText.length) {
-          endTest();
-          const minutesPassed = (60 - timeLeft) / 60;
-          const finalWpm =
-            minutesPassed > 0 ? Math.round((correctChars + 1) / 5 / minutesPassed) : 0;
-          setWpm(finalWpm);
-          setTimeout(
-            () =>
-              alert(
-                `Awesome! You finished all words early. Your speed is ${finalWpm} WPM.`
-              ),
-            100
-          );
-        }
       } else {
         setCharStates((prev) => {
           const newStates = [...prev];
@@ -97,23 +105,32 @@ export function TypingView() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isActive, targetText, currentIndex, timeLeft, correctChars]);
+  }, [isActive, targetText, currentIndex, timeElapsed, correctChars, currentDefIndex, definitionQueue]);
 
   const startTest = () => {
-    let words = [...vocabBank]
+    let defs = [...vocabBank]
+      .filter(w => w.enDefinition && w.enDefinition.trim().length > 0)
       .sort(() => 0.5 - Math.random())
-      .slice(0, 20)
-      .map((w) => w.eng);
-    const newTargetText = words.join(" ").toLowerCase();
+      .slice(0, 10) // Let's do 10 definitions per test to keep it reasonable
+      .map(w => w.enDefinition!);
 
-    setTargetText(newTargetText);
+    if (defs.length === 0) {
+      alert("No English definitions found in your vocab bank! Please add some words with definitions.");
+      return;
+    }
+
+    setDefinitionQueue(defs);
+    setCurrentDefIndex(0);
+    
+    const firstDef = defs[0].toLowerCase();
+    setTargetText(firstDef);
     setCurrentIndex(0);
-    setTimeLeft(60);
+    setTimeElapsed(0);
     setCorrectChars(0);
     setWpm(0);
 
-    const initialStates = new Array(newTargetText.length).fill("");
-    if (newTargetText.length > 0) initialStates[0] = "current";
+    const initialStates = new Array(firstDef.length).fill("");
+    if (firstDef.length > 0) initialStates[0] = "current";
     setCharStates(initialStates);
 
     setIsActive(true);
@@ -171,6 +188,14 @@ export function TypingView() {
       );
     }
 
+    if (currentIndex === targetText.length && targetText.length > 0) {
+      wordElements.push(
+        <span key="enter-prompt" className="inline-block whitespace-nowrap ml-3 text-[#ff00ff] animate-blink-caret-cyber font-bold">
+          [Press Enter]
+        </span>
+      );
+    }
+
     return wordElements;
   };
 
@@ -182,7 +207,7 @@ export function TypingView() {
       
       <div className="flex justify-between mb-[15px] px-[10px]">
         <div className="text-[20px] font-bold text-[#0ff] drop-shadow-[0_0_5px_#0ff]">
-          {timeLeft}s
+          {timeElapsed}s
         </div>
         <div className="text-[20px] font-bold text-[#ff00ff] drop-shadow-[0_0_5px_#ff00ff]">
           {wpm} WPM
