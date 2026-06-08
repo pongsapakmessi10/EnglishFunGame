@@ -525,12 +525,28 @@ document.getElementById('btn-start-typing').addEventListener('click', () => {
     const displayEl = document.getElementById('typing-text-display');
     displayEl.innerHTML = '';
     
+    let wordSpan = document.createElement('span');
+    wordSpan.className = 'type-word';
+    
     for(let i=0; i<typingTargetText.length; i++) {
+        const char = typingTargetText[i];
         const span = document.createElement('span');
         span.className = 'type-char';
         if(i === 0) span.classList.add('current');
-        span.innerText = typingTargetText[i];
-        displayEl.appendChild(span);
+        
+        if (char === ' ') {
+            span.innerHTML = '&nbsp;';
+            wordSpan.appendChild(span);
+            displayEl.appendChild(wordSpan);
+            wordSpan = document.createElement('span');
+            wordSpan.className = 'type-word';
+        } else {
+            span.innerText = char;
+            wordSpan.appendChild(span);
+        }
+    }
+    if (wordSpan.childNodes.length > 0) {
+        displayEl.appendChild(wordSpan);
     }
     
     typingCurrentIndex = 0;
@@ -565,7 +581,7 @@ document.addEventListener('keydown', (e) => {
     if(e.key.length !== 1) return; // ignore shift, ctrl, etc.
     
     const expectedChar = typingTargetText[typingCurrentIndex];
-    const spans = document.getElementById('typing-text-display').children;
+    const spans = document.querySelectorAll('#typing-text-display .type-char');
     
     if(e.key.toLowerCase() === expectedChar.toLowerCase()) {
         spans[typingCurrentIndex].classList.remove('current', 'wrong');
